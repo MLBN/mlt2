@@ -1,23 +1,17 @@
-#!/usr/bin/python3
-# vim: fileencoding=utf-8 tabstop=4 expandtab shiftwidth=4 softtabstop=4
-# vim: expandtab softtabstop=0 nosmarttab guifont=Monospace\ 14 foldmethod=manual noautoindent nocin nosi indentexpr=
-#mltminimal 2017-Programming/mlt
+# mlt2/reflection.py
+# Copyright 2019 Matthias Lesch <ml@matthiaslesch.de>
+# MIT License: http://www.opensource.org/licenses/mit-license.php
+"""
+    mlt2.reflection
+    ---------------
 
-## 24.10.19 Auskopplung aus mlt. reflection part mit Exceptions
+    This module provides slightly modified exec and eval functions.
 
+    :copyright: 2014-2020 by Matthias Lesch <ml@matthiaslesch.de>
+    :license:   MIT license
+"""
 import os,re,sys
 from textwrap import dedent
-
-class Namespace(): pass
-
-G = Namespace() # Globals
-  # current env and global var passed to makros etc.
-
-import pudb
-#dbg=pudb.set_trace
-
-def devnull(*args): pass
-dbg=devnull
 
 ## Exceptions ##
 class MltReflectionError(Exception):
@@ -26,24 +20,21 @@ class MltReflectionError(Exception):
         self.msg = msg
 ## END Exceptions ##
 
-## Utils ##    
 def myexec(s,env):
-    """ Executes python code in environment env,
-    inside code the function puts is available for 
-    direct output. Additional exception handling
+    """ Executes python code in environment env. Inside code the function
+puts is available for direct output. Additional exception handling.
     """
     res = []
     puts = res.append
     env['puts']=puts
     sorig = s
     newl='\n' in s
-    #s = s.lstrip('py')
     s = dedent(s)
     s = s.strip('\n')
     try:
         exec(s,env)
     except Exception as e:
-        print("Caught:",e.msg)
+        print("Caught:",repr(e))
         raise MltReflectionError( "Code:\n" + s )
     res = ''.join([str(i) for i in res])
     if env.get('__keepcode__',False):
@@ -61,10 +52,9 @@ def myeval(s,env):
     try:
         res=str( eval(s,env) )
     except Exception as e:
-        print("Caught:",e)
+        print("Caught:",repr(e))
         raise MltReflectionError( "Code:\n" + s )
     return fmt.format(res)
 
-
-# Testing
-env={}
+# -*- coding: utf-8 -*-
+## vim: tabstop=4 softtabstop=4 shiftwidth=4 expandtab autoindent tw=79 ft=python fenc=utf-8
