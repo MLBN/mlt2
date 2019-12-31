@@ -1,3 +1,15 @@
+# mlt2/core.py
+# Copyright 2019 Matthias Lesch <ml@matthiaslesch.de>
+# MIT License: http://www.opensource.org/licenses/mit-license.php
+"""
+    mlt2.reflection
+    ---------------
+
+    The core functionality.
+
+    :copyright: 2014-2020 by Matthias Lesch <ml@matthiaslesch.de>
+    :license:   MIT license
+"""
 #!/usr/bin/python3
 # vim: fileencoding=utf-8 tabstop=4 expandtab shiftwidth=4 softtabstop=4
 # vim: expandtab softtabstop=0 nosmarttab guifont=Monospace\ 14 foldmethod=manual noautoindent nocin nosi indentexpr=
@@ -350,3 +362,6 @@ if __name__=='__main__':
        sys.exit()
     with open( sys.argv[1],'r') as f:
         print( mltminimal( f.read(), {} ) )    
+
+# -*- coding: utf-8 -*-
+## vim: tabstop=4 softtabstop=4 shiftwidth=4 expandtab autoindent tw=79 ft=python fenc=utf-8
