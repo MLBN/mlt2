@@ -42,9 +42,6 @@ redict={
 
 
 ## Tokenizer
-tokenqueue=deque()
-push=tokenqueue.append
-pop=tokenqueue.popleft
 
 # tokentypen
 TOKRAW='0'
@@ -96,6 +93,8 @@ def nothing(s,env,**args):
 
 def noop(s,env,**args):
     return s
+
+def verb(s): return s
 
 def insert(s):
     with open(s,'r') as f:
@@ -219,6 +218,7 @@ rtenv['sumvar'] = None
 #rtenv['setsumvar'] = setsumvar
 rtenv['insert'] = insert # insert file verbatim
 rtenv['include'] = include # insert file verbatim
+rtenv['verb'] = verb
 
 def mltminimal(s,env):
     res = deque()
@@ -240,28 +240,9 @@ def mltminimal(s,env):
         f = env['__ML_'][ symboltable[ttype] ]
         tok = ipol(tok,env)  # PREPROCESSING
         puts( f(tok,env,label=label) )
-        '''        
-#if ttype=='#':
-        #    continue
-        elif ttype=='!':
-            puts( myeval(tok,env) )
-        elif ttype=='?':
-            puts( myexec(tok,env) )
-        elif ttype=='$':
-            f = env.get('__ML_user',None)
-            if f:
-                puts( f(tok,env) )
-        else:
-            puts( tok )
-        '''
     res=''.join( res )
     res=res.strip()
     return res
             
-def mlt(s):
-    print(mltminimal(s,{}))
-          
-
-
 # -*- coding: utf-8 -*-
 ## vim: tabstop=4 softtabstop=4 shiftwidth=4 expandtab autoindent tw=79 ft=python fenc=utf-8
