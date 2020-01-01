@@ -101,6 +101,11 @@ def insert(s):
     with open(s,'r') as f:
         return f.read()
 
+def include(s):
+    # run s in a sandbox
+    with open(s,'r') as f:
+        return mltminimal( f.read(), {} )
+
 ## For reasons I don't understand, the following function cannot be
 ## defined inside a script, too much fiddling with the environment
 ## dict ...
@@ -125,18 +130,15 @@ alu=Alu()
 
 class Runtime():
     # exchange vars between script and mlt
-    pass
-
-runtime="""
+    runtime="""
 <?
 from mlt2.fixed import Fixed2 as Euro
-?>
-"""
+?>"""
 
-def setsumvar(s):
-    env=Runtime.env
-    env['sumvar']=s
-    env[s] = Fixed2(0)
+#def setsumvar(s):
+#    env=Runtime.env
+#    env['sumvar']=s
+#    env[s] = Fixed2(0)
 
 def parselabel(label,res,env):
     if not label: return res
@@ -213,17 +215,19 @@ rtenv['__ML_']['txt'] = noop
 rtenv['__ML_']['symboltable'] = symboltable
 rtenv['__ML_']['numhook'] = idfunc
 #rtenv['alu'] = alu
-rtenv['runtime'] = Runtime
 rtenv['sumvar'] = None
-rtenv['setsumvar'] = setsumvar
+#rtenv['setsumvar'] = setsumvar
 rtenv['insert'] = insert # insert file verbatim
+rtenv['include'] = include # insert file verbatim
 
 def mltminimal(s,env):
     res = deque()
     puts=res.append
-    s = runtime + '\n' + s
+    runtime=Runtime()
+    runtime.env = env
+    s = runtime.runtime + '\n' + s
     toks=tokenize(s)
-    Runtime.env = env
+    rtenv['runtime'] = runtime
     env.update(rtenv)
     def process(s):
         # processes file s in current environ
