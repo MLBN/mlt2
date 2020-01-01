@@ -11,23 +11,22 @@
     :license:   MIT license
 """
 import os,re,sys
+from collections import deque
 
-def noop(s,env):
-    return ''
+from .reflection import myexec as _myexec,myeval as _myeval,MltReflectionError
+from .fixed import Fixed2
 
-def verb(s,env):
-    return s
 
+# Parsing #
 
 ## Regexes ##
+# RE muss eine Gruppe haben, wegen 3 split.
 RE_py = re.compile(r'<\?(.*?)\?>[\t ]*?\n{0,1}', re.S|re.M)
 RE_eval = re.compile(r'<\!(.*?)\!([^\!]*?)>',re.S|re.M)
 RE_comment = re.compile(r'^<\#(.*?)^\#>.*?\n', re.S|re.M)
 RE_aux = re.compile(r'<\$(.*?)\$>', re.S|re.M)
 RE_ipol = re.compile(r'#\{(.*?)\}')
 RE_bezeichner = re.compile(r'\$([a-zA-Z_]\w*)')
-## END Regexes
-
 RE_start = re.compile(r'<(\w*?[+-]{0,1})([\?\!\#\$])',re.S|re.M)
 RE_endpy = re.compile(r'(\?>)[\t ]*?\n{0,1}', re.S|re.M)
 RE_endeval = re.compile(r'(\!>)',re.S|re.M)
@@ -40,10 +39,9 @@ redict={
     '#': RE_endcomment,
     '$': RE_endaux
 }
-# RE muss eine Gruppe haben, wegen 3 split.
-#utils
 
-from collections import deque
+
+## Tokenizer
 tokenqueue=deque()
 push=tokenqueue.append
 pop=tokenqueue.popleft
@@ -55,8 +53,8 @@ TOKEVAL='2'
 TOKTXT='3'
 TOKAUX='4'
 
+#borrowed from interpolate.py
 def partition(s):
-    #borrowed from interpolate.py
     """partitions string s into left, token, right
     left: string
     token: mlt token
@@ -71,7 +69,8 @@ def partition(s):
     mo1 = end_RE.search(s,mo.end() )
 
     # it is an error if mo1 is None ....
-    return (left, '',TOKTXT), ( s[mo.end():mo1.start()],mo.group(1), mo.group(2) ),s[mo1.end():]
+    return (left, '',TOKTXT),\
+            ( s[mo.end():mo1.start()],mo.group(1), mo.group(2) ),s[mo1.end():]
 
 def tokenize(s):
     remainder=s
@@ -83,16 +82,29 @@ def tokenize(s):
          push( tokmid )
     return toks
 
-from reflection import myexec as _myexec,myeval as _myeval,MltReflectionError
+
+# Runtime
+
 def myexec(s,env,*args,**kwargs):
     return _myexec(s,env)
+
 def myeval(s,env,*args,**kwargs):
     return _myeval(s,env)
 
 def nothing(s,env,**args):
     return ''
+
 def noop(s,env,**args):
     return s
+
+def insert(s):
+    with open(s,'r') as f:
+        return f.read()
+
+def include(s):
+    # run s in a sandbox
+    with open(s,'r') as f:
+        return mltminimal( f.read(), {} )
 
 ## For reasons I don't understand, the following function cannot be
 ## defined inside a script, too much fiddling with the environment
@@ -100,6 +112,7 @@ def noop(s,env,**args):
 ## conveniences for numeval
 def idfunc(x): return x
 
+## z.Zt. ohne Funktion
 class Alu():
     def __init__(self):
         self.list = list()
@@ -113,21 +126,19 @@ class Alu():
     def sum(self):
         return sum(self.list)
 
+alu=Alu()
+
 class Runtime():
     # exchange vars between script and mlt
-    pass
-
-runtime="""
+    runtime="""
 <?
-from fixed import Fixed2 as Euro
-?>
-"""
+from mlt2.fixed import Fixed2 as Euro
+?>"""
 
-from fixed import Fixed2
-def setsumvar(s):
-    env=Runtime.env
-    env['sumvar']=s
-    env[s] = Fixed2(0)
+#def setsumvar(s):
+#    env=Runtime.env
+#    env['sumvar']=s
+#    env[s] = Fixed2(0)
 
 def parselabel(label,res,env):
     if not label: return res
@@ -146,7 +157,6 @@ def parselabel(label,res,env):
     return res
       
     
-alu=Alu()
 
 def numeval(s,env,**args):
     # evaluates to a currency format ...
@@ -156,7 +166,7 @@ def numeval(s,env,**args):
     try:
         res=Fixed2( eval(s,env) )
     except Exception as e:
-        print("Caught:",e)
+        print("Caught:",repr(e))
         raise MltReflectionError( "Code:\n" + s )
     #res = Fixed2( fmt.format(res) )
     #alu.append(res)
@@ -192,31 +202,43 @@ symboltable={
 '!': 'eval',
 '#': 'comment',
 '$': 'aux',
-'3': 'txt'
+TOKTXT: 'txt'
 }
+
+rtenv = {}
+rtenv['__ML_'] = {}
+rtenv['__ML_']['exec'] = myexec
+rtenv['__ML_']['eval'] = myeval
+rtenv['__ML_']['comment'] = nothing
+rtenv['__ML_']['aux'] = numeval
+rtenv['__ML_']['txt'] = noop
+rtenv['__ML_']['symboltable'] = symboltable
+rtenv['__ML_']['numhook'] = idfunc
+#rtenv['alu'] = alu
+rtenv['sumvar'] = None
+#rtenv['setsumvar'] = setsumvar
+rtenv['insert'] = insert # insert file verbatim
+rtenv['include'] = include # insert file verbatim
 
 def mltminimal(s,env):
     res = deque()
     puts=res.append
-    s = runtime + '\n' + s
+    runtime=Runtime()
+    runtime.env = env
+    s = runtime.runtime + '\n' + s
     toks=tokenize(s)
-    env['__ML_exec'] = myexec
-    env['__ML_eval'] = myeval
-    env['__ML_comment'] = nothing
-    env['__ML_aux'] = numeval
-    env['__ML_txt'] = noop
-    env['__ML_symboltable'] = symboltable
-    env['__ML_numhook'] = idfunc
-    env['alu'] = alu
-    Runtime.env = env
-    env['runtime'] = Runtime
-    env['sumvar'] = None
-    env['setsumvar'] = setsumvar
+    rtenv['runtime'] = runtime
+    env.update(rtenv)
+    def process(s):
+        # processes file s in current environ
+        with open(s,'r') as f:
+            s = f.read()
+        return mltminimal(s,env)
+    env['process'] = process
 
     for tok,label,ttype in toks:
-        f = env['__ML_'+symboltable[ttype] ]
-        ## PREPROCESSING
-        tok = ipol(tok,env)
+        f = env['__ML_'][ symboltable[ttype] ]
+        tok = ipol(tok,env)  # PREPROCESSING
         puts( f(tok,env,label=label) )
         '''        
 #if ttype=='#':
@@ -232,35 +254,13 @@ def mltminimal(s,env):
         else:
             puts( tok )
         '''
-    return ''.join( res )
+    res=''.join( res )
+    res=res.strip()
+    return res
             
 def mlt(s):
     print(mltminimal(s,{}))
           
-
-
-test="""Hello world
-<?     
-_puts=puts
-
-def puts(*args):
-    for s in args: _puts(s)
-
-a=9
-def hello(s):
-    return "Hello: \\n"+s
-
-def user(s,env):
-    return "USER"+s+"USER"
-
-__ML_aux=user
-puts( __ML_symboltable, '\\n' )
-?>
-Vorher1+1=<!a+1!>Wei
-<#ter
-#>
-User:<$FUCK$>
-<!hello('world')   !>."""
 
 
 # -*- coding: utf-8 -*-
