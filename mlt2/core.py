@@ -97,6 +97,10 @@ def nothing(s,env,**args):
 def noop(s,env,**args):
     return s
 
+def insert(s):
+    with open(s,'r') as f:
+        return f.read()
+
 ## For reasons I don't understand, the following function cannot be
 ## defined inside a script, too much fiddling with the environment
 ## dict ...
@@ -125,7 +129,7 @@ class Runtime():
 
 runtime="""
 <?
-from fixed import Fixed2 as Euro
+from mlt2.fixed import Fixed2 as Euro
 ?>
 """
 
@@ -196,31 +200,41 @@ symboltable={
 '!': 'eval',
 '#': 'comment',
 '$': 'aux',
-'3': 'txt'
+TOKTXT: 'txt'
 }
+
+rtenv = {}
+rtenv['__ML_'] = {}
+rtenv['__ML_']['exec'] = myexec
+rtenv['__ML_']['eval'] = myeval
+rtenv['__ML_']['comment'] = nothing
+rtenv['__ML_']['aux'] = numeval
+rtenv['__ML_']['txt'] = noop
+rtenv['__ML_']['symboltable'] = symboltable
+rtenv['__ML_']['numhook'] = idfunc
+#rtenv['alu'] = alu
+rtenv['runtime'] = Runtime
+rtenv['sumvar'] = None
+rtenv['setsumvar'] = setsumvar
+rtenv['insert'] = insert # insert file verbatim
 
 def mltminimal(s,env):
     res = deque()
     puts=res.append
     s = runtime + '\n' + s
     toks=tokenize(s)
-    env['__ML_exec'] = myexec
-    env['__ML_eval'] = myeval
-    env['__ML_comment'] = nothing
-    env['__ML_aux'] = numeval
-    env['__ML_txt'] = noop
-    env['__ML_symboltable'] = symboltable
-    env['__ML_numhook'] = idfunc
-    #env['alu'] = alu
     Runtime.env = env
-    env['runtime'] = Runtime
-    env['sumvar'] = None
-    env['setsumvar'] = setsumvar
+    env.update(rtenv)
+    def process(s):
+        # processes file s in current environ
+        with open(s,'r') as f:
+            s = f.read()
+        return mltminimal(s,env)
+    env['process'] = process
 
     for tok,label,ttype in toks:
-        f = env['__ML_'+symboltable[ttype] ]
-        ## PREPROCESSING
-        tok = ipol(tok,env)
+        f = env['__ML_'][ symboltable[ttype] ]
+        tok = ipol(tok,env)  # PREPROCESSING
         puts( f(tok,env,label=label) )
         '''        
 #if ttype=='#':
@@ -236,35 +250,13 @@ def mltminimal(s,env):
         else:
             puts( tok )
         '''
-    return ''.join( res )
+    res=''.join( res )
+    res=res.strip()
+    return res
             
 def mlt(s):
     print(mltminimal(s,{}))
           
-
-
-test="""Hello world
-<?     
-_puts=puts
-
-def puts(*args):
-    for s in args: _puts(s)
-
-a=9
-def hello(s):
-    return "Hello: \\n"+s
-
-def user(s,env):
-    return "USER"+s+"USER"
-
-__ML_aux=user
-puts( __ML_symboltable, '\\n' )
-?>
-Vorher1+1=<!a+1!>Wei
-<#ter
-#>
-User:<$FUCK$>
-<!hello('world')   !>."""
 
 
 # -*- coding: utf-8 -*-
