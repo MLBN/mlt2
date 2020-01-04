@@ -242,7 +242,7 @@ rtenv['sumvar'] = None
 rtenv['insert'] = insert # insert file verbatim
 rtenv['include'] = include # insert file verbatim
 rtenv['verb'] = verb
-rtenv['matrix']=matrix
+rtenv['matrix']=matrix # matrix from runtime is now available
 
 def mltminimal(s,env):
     res = deque()
