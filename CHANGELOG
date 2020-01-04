@@ -1,0 +1,4 @@
+new in v2.2:
+    - include, process, insert a la template toolkit
+    - improved syntax for numerics <foo$bar> may be written foo$bar
+    - simple spreadsheet function (see matrix) in runtime.py

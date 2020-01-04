@@ -15,6 +15,7 @@ from collections import deque
 
 from .reflection import myexec as _myexec,myeval as _myeval,MltReflectionError
 from .fixed import Fixed2
+from .runtime import Matrix
 
 
 # Parsing #
@@ -25,6 +26,7 @@ RE_py = re.compile(r'<\?(.*?)\?>[\t ]*?\n{0,1}', re.S|re.M)
 RE_eval = re.compile(r'<\!(.*?)\!([^\!]*?)>',re.S|re.M)
 RE_comment = re.compile(r'^<\#(.*?)^\#>.*?\n', re.S|re.M)
 RE_aux = re.compile(r'<\$(.*?)\$>', re.S|re.M)
+RE_aux_simple=re.compile(r'(\w*?[+-]{0,1})\$(\S*)_*')
 RE_ipol = re.compile(r'#\{(.*?)\}')
 RE_bezeichner = re.compile(r'\$([a-zA-Z_]\w*)')
 RE_start = re.compile(r'<(\w*?[+-]{0,1})([\?\!\#\$])',re.S|re.M)
@@ -42,13 +44,16 @@ redict={
 
 
 ## Tokenizer
+## new stacked tokenizer pattern
+#def pyblock_tokenizer(s):
+
 
 # tokentypen
 TOKRAW='0'
 TOKPY='1'
 TOKEVAL='2'
 TOKTXT='3'
-TOKAUX='4'
+TOKAUX='$'
 
 #borrowed from interpolate.py
 def partition(s):
@@ -79,8 +84,25 @@ def tokenize(s):
          push( tokmid )
     return toks
 
+def simpletok(s):
+    i = 0
+    curser = 0
+    for mo in RE_aux_simple.finditer(s):
+        yield (s[curser:mo.start()],'',TOKTXT)
+        tmp = mo.group(2); tmp = tmp.rstrip('_')
+        yield ( tmp, mo.group(1), TOKAUX)
+        curser = mo.end()
+    yield (s[curser:],'',TOKTXT)    
+            
+def tokenize2(s):
+    toks = tokenize(s)
+    for tok,label,ttype in toks:
+        if not ttype == TOKTXT: yield (tok,label,ttype)
+        else:
+            for t in simpletok(tok): yield t
 
 # Runtime
+matrix = Matrix()
 
 def myexec(s,env,*args,**kwargs):
     return _myexec(s,env)
@@ -164,6 +186,7 @@ def numeval(s,env,**args):
     fmt = '{:>' + str(width) + '.2f}'
     try:
         res=Fixed2( eval(s,env) )
+        matrix.append(res)
     except Exception as e:
         print("Caught:",repr(e))
         raise MltReflectionError( "Code:\n" + s )
@@ -219,6 +242,7 @@ rtenv['sumvar'] = None
 rtenv['insert'] = insert # insert file verbatim
 rtenv['include'] = include # insert file verbatim
 rtenv['verb'] = verb
+rtenv['matrix']=matrix # matrix from runtime is now available
 
 def mltminimal(s,env):
     res = deque()
@@ -226,7 +250,7 @@ def mltminimal(s,env):
     runtime=Runtime()
     runtime.env = env
     s = runtime.runtime + '\n' + s
-    toks=tokenize(s)
+    toks=tokenize2(s)
     rtenv['runtime'] = runtime
     env.update(rtenv)
     def process(s):
