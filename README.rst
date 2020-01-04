@@ -92,7 +92,7 @@ changed by changing a few regular expressions in the core file.
 5. Auxiliary user tag: <$ ... $>. By default it evaluates to a fixed with
    decimal expression. As syntactic sugar one may write <foo[+-]$[expression]>
    to assign the expression to the variable foo, with + or - it will be
-   added/subtracted to foo. New in v2.3: <> may be omitted.
+   added/subtracted to foo. New in v2.2: <> may be omitted.
  
 The Blocks described in 1.-5. correspond to tokens of the language.
 Before such a token is rendered, it is preprocessed as follows.
