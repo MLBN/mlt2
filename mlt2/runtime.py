@@ -38,8 +38,3 @@ class Matrix():
             tot += self.data[ curser ]
             curser += self.cols
         return tot
-
-M = Matrix(2)
-M.data=[1,2,3,4,5,6]
-
-
