@@ -15,6 +15,7 @@ from collections import deque
 
 from .reflection import myexec as _myexec,myeval as _myeval,MltReflectionError
 from .fixed import Fixed2
+from .runtime import Matrix
 
 
 # Parsing #
@@ -81,6 +82,7 @@ def tokenize(s):
 
 
 # Runtime
+matrix = Matrix()
 
 def myexec(s,env,*args,**kwargs):
     return _myexec(s,env)
@@ -164,6 +166,7 @@ def numeval(s,env,**args):
     fmt = '{:>' + str(width) + '.2f}'
     try:
         res=Fixed2( eval(s,env) )
+        matrix.append(res)
     except Exception as e:
         print("Caught:",repr(e))
         raise MltReflectionError( "Code:\n" + s )
@@ -219,6 +222,7 @@ rtenv['sumvar'] = None
 rtenv['insert'] = insert # insert file verbatim
 rtenv['include'] = include # insert file verbatim
 rtenv['verb'] = verb
+rtenv['matrix']=matrix
 
 def mltminimal(s,env):
     res = deque()
