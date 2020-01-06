@@ -14,7 +14,7 @@ import os,re,sys
 from collections import deque
 
 from .reflection import myexec as _myexec,myeval as _myeval,MltReflectionError
-from .fixed import Fixed2
+from .fixed import Fixed2, formateuro, parse_decimal
 from .runtime import Matrix
 
 
@@ -185,6 +185,7 @@ def numeval(s,env,**args):
     width=env.get('__width__',10)
     fmt = '{:>' + str(width) + '.2f}'
     try:
+        s = parse_decimal(s)
         res=Fixed2( eval(s,env) )
         matrix.append(res)
     except Exception as e:
@@ -199,7 +200,8 @@ def numeval(s,env,**args):
     if 'label' in args:
         label=args['label']
         parselabel(label,res,env)
-    return fmt.format(res)
+    #return fmt.format(res)
+    return formateuro(res)
 
 def ipol(s,env):
     method=env.get('__ML_subst','')
