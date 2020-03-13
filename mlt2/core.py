@@ -17,6 +17,8 @@ from .reflection import myexec as _myexec,myeval as _myeval,MltReflectionError
 from .fixed import Fixed2, formateuro, parse_decimal
 from .runtime import Matrix
 
+import pudb
+debug=pudb.set_trace
 
 # Parsing #
 
@@ -183,6 +185,7 @@ def numeval(s,env,**args):
     # evaluates to a currency format ...
     s=s.strip()
     width=env.get('__width__',10)
+    numfilter = env.get('numfilter')
     fmt = '{:>' + str(width) + '.2f}'
     try:
         s = parse_decimal(s)
@@ -201,15 +204,27 @@ def numeval(s,env,**args):
         label=args['label']
         parselabel(label,res,env)
     #return fmt.format(res)
-    return formateuro(res)
+    #return formateuro(res)
+    return numfilter(res,env)
+
+def numfilter(x,env):
+    x = formateuro(x)
+    #return '{}'.format(repr(env['numlatex']))
+    if env['numlatex'] is True:
+        return '\\texttt{{{}}}'.format(x.strip())
+    else:
+        return x
+
 
 def ipol(s,env):
+    debug()
     method=env.get('__ML_subst','')
     if not method:
         return s
     elif method=='$':
         RE=RE_bezeichner
         def _sub(mo):
+            #return myeval(mo.group(1),env)
             return env[mo.group(1)]
     elif method=='#{}':
         RE=RE_ipol
@@ -219,6 +234,27 @@ def ipol(s,env):
     # syntax "Hello #{var}" substitutes var for its value
     # if var is undefined ERROR
     return RE.sub(_sub,s)
+
+'''
+from dbm.gnu import open as gopen
+from pickle import loads,dumps
+class VarStore():
+    def myinit(self,pth):
+        self.dbm = gopen(pth,"c")
+        tmp = self.dbm.get("numvars",None)
+        if tmp is not None:
+            self.numvars = loads(tmp)
+        else:
+            self.numvars = {}
+
+    def load(self):
+        self.env.update( self.numvars )
+
+    def save(self):
+
+'''
+
+
     
 
 symboltable={
@@ -245,6 +281,9 @@ rtenv['insert'] = insert # insert file verbatim
 rtenv['include'] = include # insert file verbatim
 rtenv['verb'] = verb
 rtenv['matrix']=matrix # matrix from runtime is now available
+rtenv['numlatex']=False
+rtenv['numfilter']=numfilter
+
 
 def mltminimal(s,env):
     res = deque()
@@ -261,6 +300,7 @@ def mltminimal(s,env):
             s = f.read()
         return mltminimal(s,env)
     env['process'] = process
+    debug()
 
     for tok,label,ttype in toks:
         f = env['__ML_'][ symboltable[ttype] ]
