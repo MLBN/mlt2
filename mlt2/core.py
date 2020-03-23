@@ -17,8 +17,8 @@ from .reflection import myexec as _myexec,myeval as _myeval,MltReflectionError
 from .fixed import Fixed2, formateuro, parse_decimal
 from .runtime import Matrix
 
-import pudb
-debug=pudb.set_trace
+#import pudb
+#debug=pudb.set_trace
 
 # Parsing #
 
@@ -217,7 +217,7 @@ def numfilter(x,env):
 
 
 def ipol(s,env):
-    debug()
+    #debug()
     method=env.get('__ML_subst','')
     if not method:
         return s
@@ -300,7 +300,7 @@ def mltminimal(s,env):
             s = f.read()
         return mltminimal(s,env)
     env['process'] = process
-    debug()
+    #debug()
 
     for tok,label,ttype in toks:
         f = env['__ML_'][ symboltable[ttype] ]
