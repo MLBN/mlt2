@@ -165,8 +165,9 @@ from mlt2.fixed import Fixed2 as Euro
 #    env[s] = Fixed2(0)
 
 def parselabel(label,res,env):
-    env['Vars']['_lastlabel_'] = None
+    env['Vars']._lastlabel_ = None
     if not label: return res
+    env['Vars']._lastlabel_ = label 
     
     symbol = label[-1]
     if not symbol in '+-': 
@@ -178,7 +179,7 @@ def parselabel(label,res,env):
         env[label] = env[label] + res
     elif symbol=='-':
         env[label] = env[label] - res
-    env['Vars']['_lastlabel_'] = label 
+    env['Vars']._lastlabel_ = label 
     return res
       
     
@@ -205,9 +206,9 @@ def numeval(s,env,**args):
         pudb.set_trace()
         label=args['label']
         parselabel(label,res,env)
-        lastlbl = env['Vars']['_lastlabel_']
-        if lastlbl in env['Vars']:
-            targetvar = env['Vars'][lastlbl]
+        lastlbl = env['Vars']._lastlabel_
+        if lastlbl in env['Vars'].md:
+            targetvar = env['Vars'].md[lastlbl]
             tmp = targetvar.val
             targetvar.set(res)
             fmtres = str(targetvar)

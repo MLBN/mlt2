@@ -33,23 +33,21 @@ class Dec(Var):
         v.digs = digs
 
     def set(v,val):
-        pudb.set_trace()
         if val is None: val = '0.00'
         v.val = Decimal(val)
 
     def __str__(v):
-        fstr = '{:10.'+f'{v.digs}'+'}'
+        pudb.set_trace()
+        fstr = '{:10.'+f'{v.digs}f'+'}'
         return fstr.format(v.val)
 
 class MltVars():
     def __init__(mv,slave_dict):
         mv.sd = slave_dict
-        pudb.set_trace()
 
     def init(mv,fname):
         # this MUST be called on the instance BEFORE USE
         mv.fname = fname
-        pudb.set_trace()
         if os.path.exists(fname):
             with open(fname,"rb") as f:
                 mv.md = pickle.load(f)
@@ -57,14 +55,11 @@ class MltVars():
         else:
             mv.md = dict()
 
-
     def update_slave(mv):
-        pudb.set_trace()
         for key in mv.md:
             mv.sd[key] = Fixed2( mv.md[key].val )
 
     def update_master(mv):
-        pudb.set_trace()
         for key in mv.md:
             mv.md[key].set( mv.sd[key] )
 
