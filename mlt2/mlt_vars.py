@@ -5,10 +5,51 @@ import os,pickle
 from decimal import Decimal
 from mlt2.fixed import Fixed2
 
+# Variablentypen
+DEC = 'decimal'
+INT = 'integer'
+STR = 'string'
+import pudb
+
+class Var():
+    def __init__(v,name):
+        v.name = name
+        v.val = None
+
+    def __str__(v):
+        return v.val
+
+class Str(Var):
+    def __str__(v):
+        return str(v.val)
+
+    def set(v,val):
+        v.val = str(val)
+
+class Dec(Var):
+    def __init__(v,name,digs=2):
+        super().__init__(name)
+        v.val = Decimal('0.00')
+        v.digs = digs
+
+    def set(v,val):
+        pudb.set_trace()
+        if val is None: val = '0.00'
+        v.val = Decimal(val)
+
+    def __str__(v):
+        fstr = '{:10.'+f'{v.digs}'+'}'
+        return fstr.format(v.val)
+
 class MltVars():
-    def __init__(mv,slave_dict,fname):
+    def __init__(mv,slave_dict):
         mv.sd = slave_dict
+        pudb.set_trace()
+
+    def init(mv,fname):
+        # this MUST be called on the instance BEFORE USE
         mv.fname = fname
+        pudb.set_trace()
         if os.path.exists(fname):
             with open(fname,"rb") as f:
                 mv.md = pickle.load(f)
@@ -18,34 +59,41 @@ class MltVars():
 
 
     def update_slave(mv):
+        pudb.set_trace()
         for key in mv.md:
-            mv.sd[key] = Fixed2( mv.md[key] )
-        mv.sd.update(mv.md)
+            mv.sd[key] = Fixed2( mv.md[key].val )
 
     def update_master(mv):
+        pudb.set_trace()
         for key in mv.md:
-            mv.md[key] =  Decimal( mv.sd[key] )
+            mv.md[key].set( mv.sd[key] )
 
     def save_and_close(mv):
         mv.update_master()
         with open(mv.fname,"wb") as f:
             pickle.dump(mv.md,f)
 
-    def Var(mv,vname,default=None):
+    def Var(mv,vname,default=None,Typ=DEC,**kwargs):
+        pudb.set_trace()
         if vname in mv.sd:
-            mv.md[vname] = mv.sd[vname]
+            mv.md[vname].set( mv.sd[vname] )
         elif vname in mv.md:
-            mv.sd[vname] = mv.md[vname]
-        elif default is not None:
-            mv.md[vname] = default
-            mv.sd[vname] = default
+            mv.sd[vname] = mv.md[vname].val
         else:
-            mv.md[vname] = default
+            if Typ==DEC:
+                mv.md[vname] = Dec(vname, digs=kwargs.get("digs",2) )
+            else:
+                raise Exception("not implemented")
+
+            if default is not None:
+                mv.sd[vname] = default
+            else:
+                mv.md[vname].set( default )
 
     def dump_vars(mv,f):
         f.write("Saved Variables:\n")
-        for key,val in mv.md.items():
-            f.write(f"{key:10s}: {val:10.2f}\n")
+        for var in mv.md.values():
+            f.write(f"{var.name:10s}: {var.val:10.2f}\n")
 
 #M = MltVars(globals(),"test.db")            
 #M.Var("fuck")

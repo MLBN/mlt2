@@ -16,8 +16,9 @@ from collections import deque
 from .reflection import myexec as _myexec,myeval as _myeval,MltReflectionError
 from .fixed import Fixed2, formateuro, parse_decimal
 from .runtime import Matrix
+from .mlt_vars import MltVars, Var, Dec, DEC, INT, STR
 
-#import pudb
+import pudb
 #debug=pudb.set_trace
 
 # Parsing #
@@ -164,6 +165,7 @@ from mlt2.fixed import Fixed2 as Euro
 #    env[s] = Fixed2(0)
 
 def parselabel(label,res,env):
+    env['Vars']['_lastlabel_'] = None
     if not label: return res
     
     symbol = label[-1]
@@ -176,11 +178,10 @@ def parselabel(label,res,env):
         env[label] = env[label] + res
     elif symbol=='-':
         env[label] = env[label] - res
- 
+    env['Vars']['_lastlabel_'] = label 
     return res
       
     
-
 def numeval(s,env,**args):
     # evaluates to a currency format ...
     s=s.strip()
@@ -201,8 +202,17 @@ def numeval(s,env,**args):
     if sumvar is not None and s!=sumvar:
         env[sumvar] = env[sumvar]+res  
     if 'label' in args:
+        pudb.set_trace()
         label=args['label']
         parselabel(label,res,env)
+        lastlbl = env['Vars']['_lastlabel_']
+        if lastlbl in env['Vars']:
+            targetvar = env['Vars'][lastlbl]
+            tmp = targetvar.val
+            targetvar.set(res)
+            fmtres = str(targetvar)
+            targetvar.set(tmp)
+            return fmtres
     #return fmt.format(res)
     #return formateuro(res)
     return numfilter(res,env)
@@ -294,6 +304,7 @@ def mltminimal(s,env):
     toks=tokenize2(s)
     rtenv['runtime'] = runtime
     env.update(rtenv)
+    env['Vars']=MltVars( env ) # new variables.
     def process(s):
         # processes file s in current environ
         with open(s,'r') as f:
