@@ -61,6 +61,35 @@
 
     These variable refer to the processing functions. They my be altered
     inside the python blocks.
+
+    31.01.21: new feature: Variables database.
+    Usage:
+
+    PYTHONBLOCK
+    Vars.init("test.db")
+
+    ## Registered Variables
+    Vars.Var("Summe",0.00, digs=4) # decimal 4 digits after .
+    Vars.Var("D4",0.00, digs=4)
+    Vars.Var("D7",0.00, digs=7)    # decimal 7 digits after .
+    
+    ## So far only decimal vars are implemented. The formatting is determined
+    ## by the type of the target variable in a <var$expr> block.
+
+    END PYTHONBLOCK
+
+    Summe    <D4+$1.01>
+    Summe    <D7$Summe> # prints Summe in D7 format.
+    <Summe+$7.11>
+    <Summe+$7.345>
+
+
+    PYTHONBLOCK
+    Vars.save_and_close()  # saves all variables.
+    with open("test.vars","w") as f:
+        Vars.dump_vars(f)
+    END PYTHONBLOCK
+
 """
 
 """

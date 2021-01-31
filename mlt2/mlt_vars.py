@@ -16,12 +16,17 @@ class Var():
         v.name = name
         v.val = None
 
+    #@staticmethod
+    def format(v,val):
+        return val
+
     def __str__(v):
-        return v.val
+        return v.format(v.val)
 
 class Str(Var):
-    def __str__(v):
-        return str(v.val)
+    #@staticmethod
+    def format(v,val):
+        return str(val)
 
     def set(v,val):
         v.val = str(val)
@@ -31,15 +36,14 @@ class Dec(Var):
         super().__init__(name)
         v.val = Decimal('0.00')
         v.digs = digs
+        v.fstr = '{:10.'+f'{digs}f'+'}'
 
     def set(v,val):
         if val is None: val = '0.00'
         v.val = Decimal(val)
 
-    def __str__(v):
-        pudb.set_trace()
-        fstr = '{:10.'+f'{v.digs}f'+'}'
-        return fstr.format(v.val)
+    def format(v,val):
+        return v.fstr.format(val)
 
 class MltVars():
     def __init__(mv,slave_dict):

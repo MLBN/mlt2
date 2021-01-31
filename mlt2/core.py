@@ -196,7 +196,6 @@ def numeval(s,env,**args):
     except Exception as e:
         print("Caught:",repr(e))
         raise MltReflectionError( "Code:\n" + s )
-    #res = Fixed2( fmt.format(res) )
     #alu.append(res)
     # tke care of summation
     sumvar = env['sumvar']
@@ -209,13 +208,7 @@ def numeval(s,env,**args):
         lastlbl = env['Vars']._lastlabel_
         if lastlbl in env['Vars'].md:
             targetvar = env['Vars'].md[lastlbl]
-            tmp = targetvar.val
-            targetvar.set(res)
-            fmtres = str(targetvar)
-            targetvar.set(tmp)
-            return fmtres
-    #return fmt.format(res)
-    #return formateuro(res)
+            return targetvar.format(res)
     return numfilter(res,env)
 
 def numfilter(x,env):
