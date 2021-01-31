@@ -73,7 +73,7 @@ class MltVars():
             pickle.dump(mv.md,f)
 
     def Var(mv,vname,default=None,Typ=DEC,**kwargs):
-        pudb.set_trace()
+        #pudb.set_trace()
         if vname in mv.sd:
             mv.md[vname].set( mv.sd[vname] )
         elif vname in mv.md:

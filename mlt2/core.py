@@ -202,7 +202,7 @@ def numeval(s,env,**args):
     if sumvar is not None and s!=sumvar:
         env[sumvar] = env[sumvar]+res  
     if 'label' in args:
-        pudb.set_trace()
+        #pudb.set_trace()
         label=args['label']
         parselabel(label,res,env)
         lastlbl = env['Vars']._lastlabel_
