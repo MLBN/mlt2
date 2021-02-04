@@ -74,20 +74,18 @@ class MltVars():
 
     def Var(mv,vname,default=None,Typ=DEC,**kwargs):
         #pudb.set_trace()
-        if vname in mv.sd:
-            mv.md[vname].set( mv.sd[vname] )
-        elif vname in mv.md:
-            mv.sd[vname] = mv.md[vname].val
-        else:
+        if vname not in mv.md:
             if Typ==DEC:
                 mv.md[vname] = Dec(vname, digs=kwargs.get("digs",2) )
             else:
                 raise Exception("not implemented")
-
             if default is not None:
-                mv.sd[vname] = default
-            else:
                 mv.md[vname].set( default )
+
+        if vname in mv.sd:
+            mv.md[vname].set( mv.sd[vname] )
+        else:
+            mv.sd[vname] = mv.md[vname].val
 
     def dump_vars(mv,f):
         f.write("Saved Variables:\n")
