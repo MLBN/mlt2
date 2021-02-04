@@ -36,7 +36,7 @@ RE_start = re.compile(r'<(\w*?[+-]{0,1})([\?\!\#\$])',re.S|re.M)
 RE_endpy = re.compile(r'(\?>)[\t ]*?\n{0,1}', re.S|re.M)
 RE_endeval = re.compile(r'(\!>)',re.S|re.M)
 RE_endcomment = re.compile(r'(\#>).*?\n{0,1}', re.S|re.M)
-RE_endaux = re.compile(r'(\${0,1}>)', re.S|re.M)
+RE_endaux = re.compile(r'(\${0,1}>)', re.M) # re.S removed, must be on a line
 
 redict={
     '!': RE_endeval,
