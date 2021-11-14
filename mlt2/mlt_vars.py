@@ -48,6 +48,8 @@ class Dec(Var):
 class MltVars():
     def __init__(mv,slave_dict):
         mv.sd = slave_dict
+        mv.md = dict() # in case it never gets initialized
+                       # this is needed as a dummy
 
     def init(mv,fname):
         # this MUST be called on the instance BEFORE USE
