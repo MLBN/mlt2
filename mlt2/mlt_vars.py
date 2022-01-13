@@ -3,7 +3,7 @@ import os,pickle
 # Fixed2 kann nicht gepickelt werden, deshalb workaround via Decimal
 # Fixed2 in mlt2 ist ziemlich obsolet, da am Ende formateuro verwendet wird
 from decimal import Decimal
-from mlt2.fixed import Fixed2
+from mlt2.fixed import Fixed2, formateuro
 
 # Variablentypen
 DEC = 'decimal'
@@ -43,7 +43,8 @@ class Dec(Var):
         v.val = Decimal(val)
 
     def format(v,val):
-        return v.fstr.format(val)
+        #return v.fstr.format(val)
+        return formateuro(val)
 
 class MltVars():
     def __init__(mv,slave_dict):

@@ -305,7 +305,6 @@ def mltminimal(s,env):
             s = f.read()
         return mltminimal(s,env)
     env['process'] = process
-    #debug()
 
     for tok,label,ttype in toks:
         f = env['__ML_'][ symboltable[ttype] ]
